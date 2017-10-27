@@ -38,12 +38,6 @@ $observers = array(
     ),
 
     array (
-        'eventname'   => '\core\event\course_restored',
-        'callback'    => 'local_coursetocal_create_event',
-        'includefile' => '/local/coursetocal/locallib.php',
-    ),
-
-    array (
         'eventname'   => '\core\event\course_deleted',
         'callback'    => 'local_coursetocal_delete_event',
         'includefile' => '/local/coursetocal/locallib.php',
