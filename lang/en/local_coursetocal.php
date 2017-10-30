@@ -22,6 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Course to event calendar';
-$string['categoriestoshow'] = 'Select categories to show on calendar';
-$string['linktitle'] = 'Text of the link on calendar';
+$string['pluginname'] = 'Courses to Calendar';
+$string['categoriestoshow'] = 'Select Categories';
+$string['linktitle'] = 'Link Text';
