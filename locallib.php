@@ -91,6 +91,7 @@ function local_coursetocal_update_event($event) {
     $data->description     = $details->summary . "<br>" . $linkurl;
     $data->timestart       = $details->startdate;
     $data->timeduration    = $details->enddate - $details->startdate;
+    $data->eventtype      = 'ctc_site';
 
     $event->update($data);
 
@@ -141,7 +142,6 @@ function local_coursetocal_cron() {
     if ($cats) {
         $where = substr($where,0,-2);
         $sql1 .= $where;
-        // mtrace ($sql1);
     }
 
     // Validate if there are categories.
@@ -181,11 +181,9 @@ function local_coursetocal_cron() {
         // If exist the event then update.
         $sql = 'SELECT id from {event} WHERE uuid = ? AND eventtype = ?';
         if ($DB->record_exists_sql($sql, array( $course->id, 'ctc_site' ))){
-            // mtrace('Updating event calendar of course:'.$course->fullname);
             $data->id = $DB->get_field_sql($sql,array( $course->id, 'ctc_site') );
             $DB->update_record('event', $data);
         } else {
-            // mtrace('Inserting event calendar of course:'.$course->fullname);
             $lastinsertid = $DB->insert_record('event', $data);
         }
 
