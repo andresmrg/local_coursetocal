@@ -47,7 +47,7 @@ function local_coursetocal_create_event($event) {
 
     $event = new stdClass();
     $event->eventtype       = 'ctc_site';
-    $event->name            = $courseinfo['other']['shortname'];
+    $event->name            = $courseinfo['other']['fullname'];
     $event->description     = $dateinfo->summary . "<br>" . $linkurl;
     $event->uuid            = $courseinfo['courseid'];
     $event->courseid        = 1;
@@ -93,7 +93,7 @@ function local_coursetocal_update_event($event) {
     $linkurl    = html_writer::link($courseurl, $config->title);
 
     $data       = new stdClass;
-    $data->name            = $details->shortname;
+    $data->name            = $details->fullname;
     $data->description     = $details->summary . "<br>" . $linkurl;
     $data->timestart       = $details->startdate;
     $data->timeduration    = $details->enddate - $details->startdate;
