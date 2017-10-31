@@ -164,7 +164,7 @@ function local_coursetocal_cron() {
     $configtitle = (isset($config->title)) ? $config->title : "Go to course" ;
 
     // For each course update the event.
-    foreach ($courses as $course){
+    foreach ($courses as $course) {
 
         $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
         $linkurl    = html_writer::link($courseurl, $configtitle);
@@ -198,6 +198,9 @@ function local_coursetocal_cron() {
         }
 
     }
+
+    // Purge caches.
+    purge_all_caches();
 
     return true;
 }
