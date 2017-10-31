@@ -46,7 +46,7 @@ if ($hassiteconfig) {
             'local_coursetocal/categories',
             get_string('categoriestoshow','local_coursetocal'),
             '',
-            '',
+            array(),
             $categories
         )
     );
@@ -56,7 +56,7 @@ if ($hassiteconfig) {
             'local_coursetocal/title',
             get_string('linktitle', 'local_coursetocal'),
             get_string('pluginname', 'local_coursetocal'),
-            ''
+            get_string('gotocourse', 'local_coursetocal')
         )
     );
 

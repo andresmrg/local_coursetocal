@@ -80,7 +80,13 @@ function local_coursetocal_update_event($event) {
         return;
     }
 
-    $eventid    = local_coursetocal_get_eventid($courseinfo['courseid']);
+    // If no event id, make sure to create the event.
+    $eventid = local_coursetocal_get_eventid($courseinfo['courseid']);
+    if (empty($eventid)) {
+        local_coursetocal_create_event($event);
+        $eventid = local_coursetocal_get_eventid($courseinfo['courseid']);
+    }
+
     $event      = calendar_event::load($eventid);
 
     $courseurl  = new moodle_url("/course/view.php?id=" . $courseinfo['courseid']);
@@ -131,33 +137,37 @@ function local_coursetocal_cron() {
 
     // Get config.
     $config = get_config('local_coursetocal');
-    $cats = preg_split('/,/', $config->categories);
-    $sql1 = "SELECT id,category,fullname,startdate,enddate,summary,visible FROM {course}";
-
-    $where = " WHERE ";
-    foreach ($cats as $cat) {
-        $where.= " category = $cat OR";
-    }
-
-    if ($cats) {
-        $where = substr($where,0,-2);
-        $sql1 .= $where;
-    }
 
     // Validate if there are categories.
-    if (!$config->categories){
+    if (empty($config->categories)) {
         $sql1 = "SELECT id,category,fullname,startdate,enddate,summary,visible FROM {course}";
+    } else {
+        $cats = preg_split('/,/', $config->categories);
+        $sql1 = "SELECT id,category,fullname,startdate,enddate,summary,visible FROM {course}";
+
+        $where = " WHERE ";
+        foreach ($cats as $cat) {
+            $where.= " category = $cat OR";
+        }
+
+        if ($cats) {
+            $where = substr($where,0,-2);
+            $sql1 .= $where;
+        }
     }
 
     $courses = $DB->get_records_sql($sql1);
 
     // Get standard course by default to set public events.
-    $cid= $DB->get_field_sql("SELECT id FROM {course} WHERE category = ?", array(0));
+    $cid = $DB->get_field_sql("SELECT id FROM {course} WHERE category = ?", array(0));
+
+    $configtitle = (isset($config->title)) ? $config->title : "Go to course" ;
+
     // For each course update the event.
     foreach ($courses as $course){
 
         $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
-        $linkurl    = html_writer::link($courseurl, $config->title);
+        $linkurl    = html_writer::link($courseurl, $configtitle);
 
         $tday = getdate();
         $data = new stdClass();
