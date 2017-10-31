@@ -76,29 +76,34 @@ function local_coursetocal_update_event($event) {
     $details    = $event->get_record_snapshot('course', $courseinfo['courseid']);
 
     $candocategory = local_coursetocal_validate_category($details->category);
-    if (!$candocategory) {
+
+    // Attempt to get an existing event id.
+    $eventid = local_coursetocal_get_eventid($courseinfo['courseid']);
+
+    if (!$candocategory && !empty($eventid)) {
+        $event = calendar_event::load($eventid);
+        $event->delete();
+    } else if (!$candocategory) {
         return;
     }
 
-    // If no event id, make sure to create the event.
-    $eventid = local_coursetocal_get_eventid($courseinfo['courseid']);
+    // Create object.
+    $courseurl  = new moodle_url("/course/view.php?id=" . $courseinfo['courseid']);
+    $linkurl    = html_writer::link($courseurl, $config->title);
+
+    $data = new stdClass;
+    $data->name            = $details->fullname;
+    $data->description     = $details->summary . "<br>" . $linkurl;
+    $data->timestart       = $details->startdate;
+    $data->timeduration    = $details->enddate - $details->startdate;
+    $data->eventtype       = 'ctc_site';
+
     if (empty($eventid)) {
         local_coursetocal_create_event($event);
         $eventid = local_coursetocal_get_eventid($courseinfo['courseid']);
     }
 
-    $event      = calendar_event::load($eventid);
-
-    $courseurl  = new moodle_url("/course/view.php?id=" . $courseinfo['courseid']);
-    $linkurl    = html_writer::link($courseurl, $config->title);
-
-    $data       = new stdClass;
-    $data->name            = $details->fullname;
-    $data->description     = $details->summary . "<br>" . $linkurl;
-    $data->timestart       = $details->startdate;
-    $data->timeduration    = $details->enddate - $details->startdate;
-    $data->eventtype      = 'ctc_site';
-
+    $event = calendar_event::load($eventid);
     $event->update($data);
 
 }
@@ -198,9 +203,6 @@ function local_coursetocal_cron() {
         }
 
     }
-
-    // Purge caches.
-    purge_all_caches();
 
     return true;
 }
