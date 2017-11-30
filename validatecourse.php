@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Validate if a event exist.
+ * This file is usually called from an external JS added in Additional HTML
+ * If there is not JS code there, this file is useless.
  *
  * @package    local_coursetocal
  * @copyright  2017 Andres Ramos <andres.ramos@lmsdoctor.com>

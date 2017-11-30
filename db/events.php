@@ -50,8 +50,14 @@ $observers = array(
     ),
 
     array (
-        'eventname'   => 'core\event\course_category_updated',
+        'eventname'   => '\core\event\course_category_updated',
         'callback'    => 'local_coursetocal_cron',
+        'includefile' => '/local/coursetocal/locallib.php',
+    ),
+
+    array (
+        'eventname'   => '\core\event\calendar_event_updated',
+        'callback'    => 'local_coursetocal_update_course',
         'includefile' => '/local/coursetocal/locallib.php',
     ),
 );

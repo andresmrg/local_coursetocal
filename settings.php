@@ -30,7 +30,9 @@ global $DB;
 if ($hassiteconfig) {
 
     // Update events when coming to the settings to make sure changes take effect.
-    local_coursetocal_cron();
+    if (function_exists('local_coursetocal_cron')) {
+        local_coursetocal_cron();
+    }
 
     $settings = new admin_settingpage( 'local_coursetocal', get_string('pluginname', 'local_coursetocal') );
     $ADMIN->add('localplugins', $settings);

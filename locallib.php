@@ -252,7 +252,27 @@ function local_coursetocal_get_course_dates($courseid) {
     return $DB->get_record('course', array('id' => $courseid), $fields='id, summary, startdate, enddate');
 }
 
+/**
+ * Updates the course when an event is updated.
+ * @param  mixed $event
+ * @return void
+ */
+function local_coursetocal_update_course($event) {
+    global $DB;
 
+    $e          = $event->get_data();
+    $details    = $event->get_record_snapshot('event', $e['objectid']);
+    $startdate  = $details->timestart;
+    $enddate    = $details->timeduration + $startdate;
+
+    $data = new stdClass;
+    $data->id = $details->uuid;
+    $data->startdate = $startdate;
+    $data->enddate = $enddate;
+
+    $DB->update_record('course', $data);
+
+}
 
 
 
