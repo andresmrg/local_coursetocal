@@ -25,4 +25,7 @@
 require_once('../../config.php');
 require_once('locallib.php');
 
-local_coursetocal_cron();
+if (function_exists('local_coursetocal_cron')) {
+    local_coursetocal_cron();
+}
+
