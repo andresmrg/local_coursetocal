@@ -22,6 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot . '/calendar/lib.php');
 
 /**
@@ -138,7 +139,7 @@ function local_coursetocal_delete_event($event) {
 function local_coursetocal_cron() {
     global $CFG, $DB;
 
-    $DB->delete_records('event', array('eventtype' => 'ctc_site')) ;
+    $DB->delete_records('event', array('eventtype' => 'ctc_site'));
 
     // Get config.
     $config = get_config('local_coursetocal');
@@ -152,11 +153,11 @@ function local_coursetocal_cron() {
 
         $where = " WHERE ";
         foreach ($cats as $cat) {
-            $where.= " category = $cat OR";
+            $where .= " category = $cat OR";
         }
 
         if ($cats) {
-            $where = substr($where,0,-2);
+            $where = substr($where, 0, -2);
             $sql1 .= $where;
         }
     }
@@ -164,9 +165,8 @@ function local_coursetocal_cron() {
     $courses = $DB->get_records_sql($sql1);
 
     // Get standard course by default to set public events.
-    $cid = $DB->get_field_sql("SELECT id FROM {course} WHERE category = ?", array(0));
-
-    $configtitle = (isset($config->title)) ? $config->title : "Go to course" ;
+    $cid            = $DB->get_field_sql("SELECT id FROM {course} WHERE category = ?", array(0));
+    $configtitle    = (isset($config->title)) ? $config->title : get_string('gotocourse', 'local_coursetocal');
 
     // For each course update the event.
     foreach ($courses as $course) {
@@ -177,7 +177,7 @@ function local_coursetocal_cron() {
         $tday = getdate();
         $data = new stdClass();
         $data->name         = $course->fullname;
-        $data->description  = " ".$course->summary . "<br>" . $linkurl;
+        $data->description  = " " . $course->summary . "<br>" . $linkurl;
         $data->format       = 1;
         $data->courseid     = 1;
         $data->uuid         = $course->id;
@@ -195,8 +195,8 @@ function local_coursetocal_cron() {
 
         // If exist the event then update.
         $sql = 'SELECT id from {event} WHERE uuid = ? AND eventtype = ?';
-        if ($DB->record_exists_sql($sql, array( $course->id, 'ctc_site' ))){
-            $data->id = $DB->get_field_sql($sql,array( $course->id, 'ctc_site') );
+        if ($DB->record_exists_sql($sql, array( $course->id, 'ctc_site' ))) {
+            $data->id = $DB->get_field_sql($sql, array( $course->id, 'ctc_site') );
             $DB->update_record('event', $data);
         } else {
             $lastinsertid = $DB->insert_record('event', $data);
@@ -215,7 +215,7 @@ function local_coursetocal_cron() {
  */
 function local_coursetocal_get_eventid($courseid) {
     global $DB;
-    return $DB->get_record('event', array('uuid' => $courseid), $fields='id');
+    return $DB->get_record('event', array('uuid' => $courseid), 'id');
 }
 
 /**
@@ -249,7 +249,7 @@ function local_coursetocal_validate_category($coursecategory) {
  */
 function local_coursetocal_get_course_dates($courseid) {
     global $DB;
-    return $DB->get_record('course', array('id' => $courseid), $fields='id, summary, startdate, enddate');
+    return $DB->get_record('course', array('id' => $courseid), 'id, summary, startdate, enddate');
 }
 
 /**
@@ -265,10 +265,10 @@ function local_coursetocal_update_course($event) {
     $startdate  = $details->timestart;
     $enddate    = $details->timeduration + $startdate;
 
-    $data = new stdClass;
-    $data->id = $details->uuid;
-    $data->startdate = $startdate;
-    $data->enddate = $enddate;
+    $data               = new stdClass;
+    $data->id           = $details->uuid;
+    $data->startdate    = $startdate;
+    $data->enddate      = $enddate;
 
     $DB->update_record('course', $data);
 

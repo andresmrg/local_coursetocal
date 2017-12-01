@@ -39,14 +39,14 @@ if ($hassiteconfig) {
 
     $catlist = $DB->get_records_sql("SELECT * FROM {course_categories} WHERE visible = 1");
     $categories = array();
-    foreach ($catlist as $r){
+    foreach ($catlist as $r) {
         $categories[$r->id] = $r->name;
     }
 
     $settings->add(
         new admin_setting_configmultiselect(
             'local_coursetocal/categories',
-            get_string('categoriestoshow','local_coursetocal'),
+            get_string('categoriestoshow', 'local_coursetocal'),
             '',
             array(),
             $categories

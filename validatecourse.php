@@ -23,7 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('../../config.php');
+require_once(__DIR__ . '/../../config.php');
+require_login();
 
 $eventid = required_param('eventid', PARAM_INT);
 
@@ -40,5 +41,5 @@ echo json_encode($isacourse);
 function local_coursetocal_is_a_course($eventid) {
     global $DB;
     $conditions = array('id' => $eventid, 'eventtype' => 'ctc_site');
-    return $DB->get_record('event', $conditions,  $fields='id, eventtype, uuid');
+    return $DB->get_record('event', $conditions,  'id, eventtype, uuid');
 }
