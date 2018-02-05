@@ -36,9 +36,10 @@ function local_coursetocal_create_event($event) {
     $config         = get_config('local_coursetocal');
     $courseinfo     = $event->get_data();
     $details        = $event->get_record_snapshot('course', $courseinfo['courseid']);
-    $dateinfo       = local_coursetocal_get_course_dates($courseinfo['courseid']);
+    $dateinfo       = local_coursetocal_get_course_dates($details->id);
 
     $candocategory = local_coursetocal_validate_category($details->category);
+
     if (!$candocategory) {
         return;
     }
@@ -47,18 +48,19 @@ function local_coursetocal_create_event($event) {
     $linkurl = html_writer::link($courseurl, $config->title);
 
     $event = new stdClass();
-    $event->eventtype       = 'ctc_site';
-    $event->name            = $courseinfo['other']['fullname'];
-    $event->description     = $dateinfo->summary . "<br>" . $linkurl;
-    $event->uuid            = $courseinfo['courseid'];
+    $event->eventtype       = 'site';
+    $event->type            = '-99';
+    $event->name            = $details->fullname;
+    $event->description     = $details->summary . "<br>" . $linkurl;
+    $event->uuid            = $details->id;
     $event->courseid        = 1;
     $event->groupid         = 0;
     $event->userid          = 2;
     $event->modulename      = 0;
     $event->instance        = 0;
-    $event->timestart       = $dateinfo->startdate;
+    $event->timestart       = $details->startdate;
     $event->visible         = 1;
-    $event->timeduration    = $dateinfo->enddate - $dateinfo->startdate;
+    $event->timeduration    = $details->enddate - $details->startdate;
 
     calendar_event::create($event);
 
@@ -97,7 +99,8 @@ function local_coursetocal_update_event($event) {
     $data->description     = $details->summary . "<br>" . $linkurl;
     $data->timestart       = $details->startdate;
     $data->timeduration    = $details->enddate - $details->startdate;
-    $data->eventtype       = 'ctc_site';
+    $data->type            = '-99';
+    $data->eventtype       = 'site';
 
     if (empty($eventid)) {
         local_coursetocal_create_event($event);
@@ -139,7 +142,7 @@ function local_coursetocal_delete_event($event) {
 function local_coursetocal_cron() {
     global $CFG, $DB;
 
-    $DB->delete_records('event', array('eventtype' => 'ctc_site'));
+    $DB->delete_records('event', array('eventtype' => 'site', 'type' => '-99'));
 
     // Get config.
     $config = get_config('local_coursetocal');
@@ -190,7 +193,8 @@ function local_coursetocal_cron() {
         $data->repeatid     = 0;
         $data->modulename   = 0;
         $data->instance     = 0;
-        $data->eventtype    = 'ctc_site';
+        $data->eventtype    = 'site';
+        $data->type         = '-99';
         $data->timestart    = $course->startdate;
         $data->timeduration = $course->enddate - $course->startdate;
         $data->timemodified = $tday['0'];
@@ -198,9 +202,9 @@ function local_coursetocal_cron() {
         $data->visible      = $course->visible;
 
         // If exist the event then update.
-        $sql = 'SELECT id from {event} WHERE uuid = ? AND eventtype = ?';
-        if ($DB->record_exists_sql($sql, array( $course->id, 'ctc_site' ))) {
-            $data->id = $DB->get_field_sql($sql, array( $course->id, 'ctc_site') );
+        $sql = 'SELECT id from {event} WHERE uuid = ? AND eventtype = ? AND type = ?';
+        if ($DB->record_exists_sql($sql, array( $course->id, 'site', '-99' ))) {
+            $data->id = $DB->get_field_sql($sql, array( $course->id, 'site', '-99') );
             $DB->update_record('event', $data);
         } else {
             $lastinsertid = $DB->insert_record('event', $data);
@@ -264,13 +268,28 @@ function local_coursetocal_get_course_dates($courseid) {
 function local_coursetocal_update_course($event) {
     global $DB;
 
+    // We need the config title to find the course link in the descripton
+    // of the event and remove it, the course description should not
+    // have the link.
+    $config         = get_config('local_coursetocal');
+    $configtitle    = (isset($config->title)) ? $config->title : get_string('gotocourse', 'local_coursetocal');
+
     $e          = $event->get_data();
     $details    = $event->get_record_snapshot('event', $e['objectid']);
+    $summary    = $details->description;
     $startdate  = $details->timestart;
     $enddate    = $details->timeduration + $startdate;
 
+    $courseurl   = new moodle_url("/course/view.php?id=" . $details->uuid);
+    $linkurl     = html_writer::link($courseurl, $configtitle);
+
+    // Remove link.
+    $description = str_replace($linkurl, "", $summary);
+
     $data               = new stdClass;
     $data->id           = $details->uuid;
+    $data->fullname     = $details->name;
+    $data->summary      = $description;
     $data->startdate    = $startdate;
     $data->enddate      = $enddate;
 
