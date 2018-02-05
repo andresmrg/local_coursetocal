@@ -25,4 +25,4 @@
 $string['pluginname'] = 'Courses to Calendar';
 $string['categoriestoshow'] = 'Select Categories';
 $string['linktitle'] = 'Link Text';
-$string['gotocourse'] = 'Click Here to Access';
+$string['gotocourse'] = 'Click Here for Access';
