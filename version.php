@@ -25,7 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_coursetocal'; // Full name of the plugin (used for diagnostics)
-$plugin->version   = 2017120100; // The current module version (Date: YYYYMMDDXX)
+$plugin->version   = 2017120600; // The current module version (Date: YYYYMMDDXX)
 $plugin->requires  = 2016112900;    // Requires this Moodle version
-$plugin->release = 'v3.4';
-$plugin->maturity = MATURITY_STABLE;
+$plugin->cron      = 300; // Seconds.
+$plugin->release   = 'v3.4';
+$plugin->maturity  = MATURITY_STABLE;
