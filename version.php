@@ -28,3 +28,5 @@ $plugin->component = 'local_coursetocal'; // Full name of the plugin (used for d
 $plugin->version   = 2017120100; // The current module version (Date: YYYYMMDDXX)
 $plugin->requires  = 2016112900;    // Requires this Moodle version
 $plugin->cron = 30; // Seconds.
+$plugin->release = 'v3.4';
+$plugin->maturity = MATURITY_STABLE;
