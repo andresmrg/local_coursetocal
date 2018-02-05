@@ -12,4 +12,4 @@ This plugin has the following features.
 - You can change the text link that takes the user to the course from the calendar.
 - You can change the courses categories that will display the courses in the calendar as Site Events.
 
-Big thanks for the sponsor ecboces.org and developed by LMS Doctor www.lmsdoctor.com
+This plugin was sponsored by ECBOCES www.ecboces.org and developed by LMS Doctor www.lmsdoctor.com
