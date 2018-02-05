@@ -171,6 +171,10 @@ function local_coursetocal_cron() {
     // For each course update the event.
     foreach ($courses as $course) {
 
+        if ($course->id == 1) {
+            continue;
+        }
+
         $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
         $linkurl    = html_writer::link($courseurl, $configtitle);
 
