@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot . '/calendar/lib.php');
+require_once($CFG->libdir . '/coursecatlib.php');
 
 /**
  * Create calendar event.
@@ -37,6 +38,7 @@ function local_coursetocal_create_event($event) {
     $courseinfo     = $event->get_data();
     $details        = $event->get_record_snapshot('course', $courseinfo['courseid']);
     $dateinfo       = local_coursetocal_get_course_dates($details->id);
+    $summaryfile    = local_coursetocal_get_coursesummaryfile($details);
 
     $candocategory = local_coursetocal_validate_category($details->category);
 
@@ -51,7 +53,7 @@ function local_coursetocal_create_event($event) {
     $event->eventtype       = 'site';
     $event->type            = '-99';
     $event->name            = $details->fullname;
-    $event->description     = $details->summary . "<br>" . $linkurl;
+    $event->description     = $details->summary . "<br>" . $summaryfile . $linkurl;
     $event->uuid            = $details->id;
     $event->courseid        = 1;
     $event->groupid         = 0;
@@ -67,6 +69,50 @@ function local_coursetocal_create_event($event) {
 }
 
 /**
+ * Display course summary.
+ * @param  object $course
+ * @return string
+ */
+function local_coursetocal_get_coursesummaryfile($course) {
+    global $CFG;
+
+    // Create a course_in_list object to use the get_course_overviewfiles() method.
+    $course         = new course_in_list($course);
+    $output         = '';
+    foreach ($course->get_course_overviewfiles() as $file) {
+        if ($file->is_valid_image()) {
+            $imagepath = '/' . $file->get_contextid() .
+                    '/' . $file->get_component() .
+                    '/' . $file->get_filearea() .
+                    $file->get_filepath() .
+                    $file->get_filename();
+            $imageurl = file_encode_url($CFG->wwwroot . '/pluginfile.php', $imagepath,
+                    false);
+            $output = html_writer::tag('div',
+                    html_writer::empty_tag('img', array('src' => $imageurl)),
+                    array('class' => 'courseimage'));
+            $output .= html_writer::empty_tag('br');
+            $output .= html_writer::empty_tag('br');
+            // Use the first image found.
+            break;
+        } else {
+            $filepath = '/' . $file->get_contextid() .
+                    '/' . $file->get_component() .
+                    '/' . $file->get_filearea() .
+                    $file->get_filepath() .
+                    $file->get_filename();
+            $fileurl = file_encode_url($CFG->wwwroot . '/pluginfile.php', $filepath, false);
+            $output = html_writer::link($fileurl, $file->get_filename());
+            $output .= html_writer::empty_tag('br');
+            $output .= html_writer::empty_tag('br');
+            break;
+        }
+    }
+    return $output;
+
+}
+
+/**
  * Update calendar event.
  *
  * @param  object $event
@@ -77,6 +123,7 @@ function local_coursetocal_update_event($event) {
     $config     = get_config('local_coursetocal');
     $courseinfo = $event->get_data();
     $details    = $event->get_record_snapshot('course', $courseinfo['courseid']);
+    $summaryfile  = local_coursetocal_get_coursesummaryfile($details);
 
     $candocategory = local_coursetocal_validate_category($details->category);
 
@@ -96,7 +143,7 @@ function local_coursetocal_update_event($event) {
 
     $data = new stdClass;
     $data->name            = $details->fullname;
-    $data->description     = $details->summary . "<br>" . $linkurl;
+    $data->description     = $details->summary . "<br>" . $summaryfile . $linkurl;
     $data->timestart       = $details->startdate;
     $data->timeduration    = $details->enddate - $details->startdate;
     $data->type            = '-99';
@@ -180,11 +227,12 @@ function local_coursetocal_cron() {
 
         $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
         $linkurl    = html_writer::link($courseurl, $configtitle);
+        $summaryfile  = local_coursetocal_get_coursesummaryfile($course);
 
         $tday = getdate();
         $data = new stdClass();
         $data->name         = $course->fullname;
-        $data->description  = " " . $course->summary . "<br>" . $linkurl;
+        $data->description  = " " . $course->summary . "<br>" . $summaryfile . $linkurl;
         $data->format       = 1;
         $data->courseid     = 1;
         $data->uuid         = $course->id;
@@ -283,8 +331,18 @@ function local_coursetocal_update_course($event) {
     $courseurl   = new moodle_url("/course/view.php?id=" . $details->uuid);
     $linkurl     = html_writer::link($courseurl, $configtitle);
 
+    // Get the course details to be able to get the course summary file.
+    // Once we get the file we could simply remove it from the summary
+    // because we don't want this on the course description.
+    $coursedetail = $event->get_record_snapshot('course', $details->uuid);
+    $summaryfile  = local_coursetocal_get_coursesummaryfile($coursedetail);
+
     // Remove link.
-    $description = str_replace($linkurl, "", $summary);
+    $linkremoved = str_replace($linkurl, "", $summary);
+
+    // Remove summary file.
+    $description = str_replace($summaryfile, "", $linkremoved);
+    $description = str_replace("<br /><br />", "", $description);
 
     $data               = new stdClass;
     $data->id           = $details->uuid;
