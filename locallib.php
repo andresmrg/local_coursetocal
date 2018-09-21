@@ -77,6 +77,10 @@ function local_coursetocal_get_coursesummaryfile($course) {
     global $CFG;
 
     // Create a course_in_list object to use the get_course_overviewfiles() method.
+    if (gettype($course) == 'boolean') {
+        return;
+    }
+
     $course         = new course_in_list($course);
     $output         = '';
     foreach ($course->get_course_overviewfiles() as $file) {
@@ -324,6 +328,12 @@ function local_coursetocal_update_course($event) {
 
     $e          = $event->get_data();
     $details    = $event->get_record_snapshot('event', $e['objectid']);
+
+    // If the event is not -99, it is not a course event.
+    if ($details->type != '-99') {
+        return;
+    }
+
     $summary    = $details->description;
     $startdate  = $details->timestart;
     $enddate    = $details->timeduration + $startdate;
