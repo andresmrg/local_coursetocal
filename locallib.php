@@ -76,11 +76,6 @@ function local_coursetocal_create_event($event) {
 function local_coursetocal_get_coursesummaryfile($course) {
     global $CFG;
 
-    // Create a course_in_list object to use the get_course_overviewfiles() method.
-    if (gettype($course) == 'boolean') {
-        return;
-    }
-
     $course         = new course_in_list($course);
     $output         = '';
     foreach ($course->get_course_overviewfiles() as $file) {
