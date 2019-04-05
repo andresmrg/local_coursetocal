@@ -272,7 +272,7 @@ function local_coursetocal_cron() {
  */
 function local_coursetocal_get_eventid($courseid) {
     global $DB;
-    return $DB->get_record('event', array('uuid' => $courseid), 'id');
+    return $DB->get_record('event', array('uuid' => $courseid, 'courseid' => 1), 'id');
 }
 
 /**
