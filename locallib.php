@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot . '/calendar/lib.php');
-require_once($CFG->libdir . '/coursecatlib.php');
+// require_once($CFG->libdir . '/coursecatlib.php');
 
 /**
  * Create calendar event.
@@ -76,7 +76,7 @@ function local_coursetocal_create_event($event) {
 function local_coursetocal_get_coursesummaryfile($course) {
     global $CFG;
 
-    $course         = new course_in_list($course);
+    $course         = new core_course_list_element($course);
     $output         = '';
     foreach ($course->get_course_overviewfiles() as $file) {
         if ($file->is_valid_image()) {
