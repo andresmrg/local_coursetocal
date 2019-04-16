@@ -61,7 +61,7 @@ function local_coursetocal_create_event($event) {
     $event->modulename      = 0;
     $event->instance        = 0;
     $event->timestart       = $details->startdate;
-    $event->visible         = 1;
+    $event->visible         = (empty($details->visible)) ? 0 : 1;
     $event->timeduration    = $details->enddate - $details->startdate;
 
     calendar_event::create($event);
@@ -147,6 +147,8 @@ function local_coursetocal_update_event($event) {
     $data->timeduration    = $details->enddate - $details->startdate;
     $data->type            = '-99';
     $data->eventtype       = 'site';
+    $data->modulename      = 0;
+    $data->visible         = (empty($details->visible)) ? 0 : 1;
 
     if (empty($eventid)) {
         local_coursetocal_create_event($event);
@@ -246,7 +248,7 @@ function local_coursetocal_cron() {
         $data->timeduration = $course->enddate - $course->startdate;
         $data->timemodified = $tday['0'];
         $data->sequence     = 1;
-        $data->visible      = $course->visible;
+        $data->visible      = (empty($course->visible)) ? 0 : 1;
 
         // If exist the event then update.
         $sql = 'SELECT id from {event} WHERE uuid = ? AND eventtype = ? AND type = ?';
@@ -270,7 +272,7 @@ function local_coursetocal_cron() {
  */
 function local_coursetocal_get_eventid($courseid) {
     global $DB;
-    return $DB->get_record('event', array('uuid' => $courseid), 'id');
+    return $DB->get_record('event', array('uuid' => $courseid, 'courseid' => 1), 'id');
 }
 
 /**
