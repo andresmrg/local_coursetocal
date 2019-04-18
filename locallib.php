@@ -131,6 +131,9 @@ function local_coursetocal_update_event($event) {
 
     if (!$candocategory && !empty($eventid)) {
         $event = calendar_event::load($eventid);
+        $event->name = $courseinfo['other']['fullname'];
+        $event->timestart = $details->startdate;
+        $event->repeatid = 0;
         $event->delete();
     } else if (!$candocategory) {
         return;
@@ -153,6 +156,12 @@ function local_coursetocal_update_event($event) {
     if (empty($eventid)) {
         local_coursetocal_create_event($event);
         $eventid = local_coursetocal_get_eventid($courseinfo['courseid']);
+    }
+
+    // Review if the category where the course is, can update in the calendar.
+    $candocategory = local_coursetocal_validate_category($details->category);
+    if (!$candocategory) {
+        return;
     }
 
     $event = calendar_event::load($eventid);
