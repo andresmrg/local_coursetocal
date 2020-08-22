@@ -18,7 +18,7 @@
  * Events
  *
  * @package    local_coursetocal
- * @copyright  2017 Andres Ramos <andres.ramos@lmsdoctor.com>
+ * @copyright  2020 LMS DOCTOR
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,41 +27,31 @@ defined('MOODLE_INTERNAL') || die();
 $observers = array(
     array (
         'eventname'   => '\core\event\course_updated',
-        'callback'    => 'local_coursetocal_update_event',
-        'includefile' => '/local/coursetocal/locallib.php',
+        'callback'    => '\local_coursetocal\helper::update_event',
     ),
 
     array (
         'eventname'   => '\core\event\course_created',
-        'callback'    => 'local_coursetocal_create_event',
-        'includefile' => '/local/coursetocal/locallib.php',
+        'callback'    => '\local_coursetocal\helper::create_event',
     ),
 
     array (
         'eventname'   => '\core\event\course_restored',
-        'callback'    => 'local_coursetocal_create_event',
-        'includefile' => '/local/coursetocal/locallib.php',
+        'callback'    => '\local_coursetocal\helper::create_event',
     ),
 
     array (
         'eventname'   => '\core\event\course_deleted',
-        'callback'    => 'local_coursetocal_delete_event',
-        'includefile' => '/local/coursetocal/locallib.php',
+        'callback'    => '\local_coursetocal\helper::delete_event',
     ),
 
     array (
         'eventname'   => '\core\event\course_category_updated',
-        'callback'    => 'local_coursetocal_cron',
-        'includefile' => '/local/coursetocal/locallib.php',
+        'callback'    => '\local_coursetocal\helper::cron',
     ),
 
     array (
         'eventname'   => '\core\event\calendar_event_updated',
-        'callback'    => 'local_coursetocal_update_course',
-        'includefile' => '/local/coursetocal/locallib.php',
+        'callback'    => '\local_coursetocal\helper::update_course',
     ),
 );
-
-
-
-

@@ -15,18 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version file.
+ * Privacy provider class.
  *
  * @package    local_coursetocal
  * @copyright  2020 LMS DOCTOR
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_coursetocal\privacy;
 
-$plugin->component = 'local_coursetocal'; // Full name of the plugin (used for diagnostics)
-$plugin->version   = 2020082201; // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2016112900;    // Requires this Moodle version
-$plugin->cron      = 300; // Seconds.
-$plugin->release   = 'v3.8.0';
-$plugin->maturity  = MATURITY_STABLE;
+/**
+ * Privacy provider class.
+ *
+ * @package    local_coursetocal
+ * @copyright  2020 LMS DOCTOR
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class provider implements
+    // This plugin does not store any personal user data.
+    \core_privacy\local\metadata\null_provider {
+
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason() : string {
+        return 'privacy:metadata';
+    }
+}

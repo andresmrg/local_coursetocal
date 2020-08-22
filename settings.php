@@ -18,31 +18,19 @@
  * Settings
  *
  * @package    local_coursetocal
- * @copyright  2017 Andres Ramos <andres.ramos@lmsdoctor.com>
+ * @copyright  2020 LMS DOCTOR
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
-require_once('locallib.php');
 
-global $DB;
-
-if ($hassiteconfig) {
+if ($ADMIN->fulltree) {
 
     // Update events when coming to the settings to make sure changes take effect.
-    if (function_exists('local_coursetocal_cron')) {
-        local_coursetocal_cron();
-    }
+    \local_coursetocal\helper::cron();
 
     $settings = new admin_settingpage( 'local_coursetocal', get_string('pluginname', 'local_coursetocal') );
-    $ADMIN->add('localplugins', $settings);
-
-    $catlist = $DB->get_records_sql("SELECT * FROM {course_categories} WHERE visible = 1");
-    $categories = array();
-    foreach ($catlist as $r) {
-        $categories[$r->id] = $r->name;
-    }
-
+    $categories = \local_coursetocal\helper::get_course_categories();
     $settings->add(
         new admin_setting_configmultiselect(
             'local_coursetocal/categories',
@@ -62,9 +50,6 @@ if ($hassiteconfig) {
         )
     );
 
+    $ADMIN->add('localplugins', $settings);
+
 }
-
-
-
-
-

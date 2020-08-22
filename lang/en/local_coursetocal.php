@@ -18,7 +18,7 @@
  * This file holds the functions.
  *
  * @package    local_coursetocal
- * @copyright  2017 Andres Ramos <andres.ramos@lmsdoctor.com>
+ * @copyright  2020 LMS DOCTOR
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,3 +26,4 @@ $string['pluginname'] = 'Courses to Calendar';
 $string['categoriestoshow'] = 'Select Categories';
 $string['linktitle'] = 'Link Text';
 $string['gotocourse'] = 'Click Here for Access';
+$string['privacy:metadata'] = 'The Courses to Calendar plugin only displays courses dates in the calendar.';
