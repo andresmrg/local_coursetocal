@@ -35,7 +35,7 @@ if ($ADMIN->fulltree) {
         new admin_setting_configmultiselect(
             'local_coursetocal/categories',
             get_string('categoriestoshow', 'local_coursetocal'),
-            '',
+            get_string('categoriestoshow_desc', 'local_coursetocal'),
             array(1),
             $categories
         )
@@ -45,7 +45,7 @@ if ($ADMIN->fulltree) {
         new admin_setting_configtext(
             'local_coursetocal/title',
             get_string('linktitle', 'local_coursetocal'),
-            get_string('pluginname', 'local_coursetocal'),
+            get_string('linktitle_desc', 'local_coursetocal'),
             get_string('gotocourse', 'local_coursetocal')
         )
     );

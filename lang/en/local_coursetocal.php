@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file holds the functions.
+ * Language strings.
  *
  * @package    local_coursetocal
  * @copyright  2020 LMS DOCTOR
@@ -24,6 +24,9 @@
 
 $string['pluginname'] = 'Courses to Calendar';
 $string['categoriestoshow'] = 'Select Categories';
+$string['categoriestoshow_desc'] = 'All courses in the selected categories above will be displayed in the calendar based on their startdate and enddate. By default,
+    the Miscellaneous category is selected.';
 $string['linktitle'] = 'Link Text';
+$string['linktitle_desc'] = 'The link text the user clicks to go to the course when viewing the event in the calendar.';
 $string['gotocourse'] = 'Click Here for Access';
-$string['privacy:metadata'] = 'The Courses to Calendar plugin only displays courses dates in the calendar.';
+$string['privacy:metadata'] = 'The Courses to Calendar plugin only displays courses dates and descriptions in the calendar.';

@@ -80,7 +80,7 @@ class helper {
         $event->visible         = (empty($details->visible)) ? 0 : 1;
         $event->timeduration    = $details->enddate - $details->startdate;
 
-        calendar_event::create($event);
+        \calendar_event::create($event);
 
     }
 
@@ -146,7 +146,7 @@ class helper {
         $eventid = self::get_eventid($courseinfo['courseid']);
 
         if (!$candocategory && !empty($eventid)) {
-            $event = calendar_event::load($eventid);
+            $event = \calendar_event::load($eventid);
             $event->name = $courseinfo['other']['fullname'];
             $event->timestart = $details->startdate;
             $event->repeatid = 0;
@@ -180,7 +180,7 @@ class helper {
             return;
         }
 
-        $event = calendar_event::load($eventid);
+        $event = \calendar_event::load($eventid);
         $event->update($data);
 
     }
@@ -202,7 +202,7 @@ class helper {
         }
 
         $eventid = self::get_eventid($courseinfo['courseid']);
-        $events = calendar_event::load($eventid);
+        $events = \calendar_event::load($eventid);
         $events->delete();
 
     }
