@@ -406,7 +406,7 @@ class helper {
      */
     public static function get_course_categories() {
         global $DB;
-        $catlist = $DB->get_records_sql("SELECT * FROM {course_categories}");
+        $catlist = $DB->get_records('course_categories');
         $categories = [];
         foreach ($catlist as $r) {
             $categories[$r->id] = $r->name;
