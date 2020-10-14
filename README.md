@@ -8,7 +8,6 @@ This plugin has the following features.
 
 - From the calendar users can access to a course through a Link.
 - As an admin, you can update the course's date directly from the calendar. It supports drag and drop functionality so it automatically updates the course with the new dates.
-- As an admin, you can update the course's summary from the calendar.
 - You can change the text link that takes the user to the course from the calendar.
 - You can change the courses categories that will display the courses in the calendar as Site Events.
 

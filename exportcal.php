@@ -15,19 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings.
+ * Confirm self registered user.
  *
  * @package    local_coursetocal
- * @copyright  2020 LMS DOCTOR
+ * @copyright  2020 LMS Doctor
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Courses to Calendar';
-$string['categoriestoshow'] = 'Select Categories';
-$string['categoriestoshow_desc'] = 'All courses in the selected categories above will be displayed in the calendar based on their startdate and enddate. By default,
-    the Miscellaneous category is selected.';
-$string['linktitle'] = 'Link Text';
-$string['linktitle_desc'] = 'The link text the user clicks to go to the course when viewing the event in the calendar.';
-$string['gotocourse'] = 'Click Here for Access';
-$string['exportcal'] = 'Export Event';
-$string['privacy:metadata'] = 'The Courses to Calendar plugin only displays courses dates and descriptions in the calendar.';
+require(__DIR__ . '/../../config.php');
+
+global $USER, $DB;
+
+$password = $DB->get_record('user', array('id' => $USER->id), 'password');
+$params = array();
+$params['userid']      = $USER->id;
+$params['authtoken']   = sha1($USER->id . (isset($password->password) ? $password->password : '') . $CFG->calendar_exportsalt);
+$params['eventid']   = optional_param('eventid', 0, PARAM_INT);
+
+$link = new moodle_url('/local/coursetocal/export.php', $params);
+$urlclasses = array('class' => 'generalbox calendarurl');
+$calendarurl = html_writer::tag( 'div', get_string('calendarurl', 'calendar', $link->out()), $urlclasses);
+redirect($link);

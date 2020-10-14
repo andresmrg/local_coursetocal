@@ -65,23 +65,45 @@ class helper {
         $courseurl = new moodle_url("/course/view.php?id=" . $courseinfo['courseid']);
         $linkurl = html_writer::link($courseurl, $config->title);
 
-        $event = new stdClass();
-        $event->eventtype       = 'site';
-        $event->type            = '-99';
-        $event->name            = $details->fullname;
-        $event->description     = $details->summary . "<br>" . $summaryfile . $linkurl;
-        $event->uuid            = $details->id;
-        $event->courseid        = 1;
-        $event->groupid         = 0;
-        $event->userid          = 2;
-        $event->modulename      = 0;
-        $event->instance        = 0;
-        $event->timestart       = $details->startdate;
-        $event->visible         = (empty($details->visible)) ? 0 : 1;
-        $event->timeduration    = $details->enddate - $details->startdate;
+        $data = self::build_data(
+            $details->fullname,
+            $details->id,
+            $details->startdate,
+            $details->enddate,
+            $details->visible
+        );
 
-        \calendar_event::create($event);
+        $event = \calendar_event::create($data);
+        $eventid = self::get_eventid($details->id);
 
+        // Capture the eventid to generate the link to export.
+        $params = array('eventid' => $eventid->id);
+        $calurl = new moodle_url('/local/coursetocal/exportcal.php', $params);
+        $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
+        $linkurl .= html_writer::link($calurl, get_string('exportcal', 'local_coursetocal'), $attr);
+        $event->description = $details->summary . "<br>" . $summaryfile . $linkurl;
+
+        $event->update($data);
+
+    }
+
+    protected static function build_data($fullname, $uuid, $tstart, $tend, $visible) {
+        $data = new stdClass();
+
+        $data->eventtype       = 'site';
+        $data->type            = '-99';
+        $data->name            = $fullname;
+        $data->uuid            = $uuid;
+        $data->courseid        = 1;
+        $data->groupid         = 0;
+        $data->userid          = 2;
+        $data->modulename      = 0;
+        $data->instance        = 0;
+        $data->timestart       = $tstart;
+        $data->visible         = (empty($visible)) ? 0 : 1;
+        $data->timeduration    = $tend - $tstart;
+
+        return $data;
     }
 
     /**
@@ -158,6 +180,11 @@ class helper {
         // Create object.
         $courseurl  = new moodle_url("/course/view.php?id=" . $courseinfo['courseid']);
         $linkurl    = html_writer::link($courseurl, $config->title);
+
+        $params = array('eventid' => $eventid->id);
+        $calurl = new moodle_url('/local/coursetocal/exportcal.php', $params);
+        $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
+        $linkurl .= html_writer::link($calurl, get_string('exportcal', 'local_coursetocal'), $attr);
 
         $data = new stdClass;
         $data->name            = $details->fullname;
@@ -251,14 +278,11 @@ class helper {
                 continue;
             }
 
-            $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
-            $linkurl    = html_writer::link($courseurl, $configtitle);
             $summaryfile  = self::get_coursesummaryfile($course);
 
             $tday = getdate();
             $data = new stdClass();
             $data->name         = $course->fullname;
-            $data->description  = " " . $course->summary . "<br>" . $summaryfile . $linkurl;
             $data->format       = 1;
             $data->courseid     = 1;
             $data->uuid         = $course->id;
@@ -279,9 +303,41 @@ class helper {
             $sql = 'SELECT id from {event} WHERE uuid = ? AND eventtype = ? AND type = ?';
             if ($DB->record_exists_sql($sql, array( $course->id, 'site', '-99' ))) {
                 $data->id = $DB->get_field_sql($sql, array( $course->id, 'site', '-99') );
-                $DB->update_record('event', $data);
+                $event = \calendar_event::load($data->id);
+
+                // Capture the eventid to generate the link to export.
+                $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
+                $linkurl    = html_writer::link($courseurl, $configtitle);
+
+                $params = array('eventid' => $event->id);
+                $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
+                $linkurl .= html_writer::link(
+                    new moodle_url('/local/coursetocal/exportcal.php', $params),
+                    get_string('exportcal', 'local_coursetocal'), $attr
+                );
+                $data->description = $course->summary . "<br>" . $summaryfile . $linkurl;
+
+                $event->update($data);
+
             } else {
-                $lastinsertid = $DB->insert_record('event', $data);
+
+                // Create the event and update with the new link to download.
+                $event = \calendar_event::create($data);
+
+                // Capture the eventid to generate the link to export.
+                $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
+                $linkurl    = html_writer::link($courseurl, $configtitle);
+
+                $params = array('eventid' => $event->id);
+                $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
+                $linkurl .= html_writer::link(
+                    new moodle_url('/local/coursetocal/exportcal.php', $params),
+                    get_string('exportcal', 'local_coursetocal'), $attr
+                );
+                $data->description = $course->summary . "<br>" . $summaryfile . $linkurl;
+
+                $event->update($data);
+
             }
 
         }
@@ -356,30 +412,12 @@ class helper {
             return;
         }
 
-        $summary    = $details->description;
         $startdate  = $details->timestart;
         $enddate    = $details->timeduration + $startdate;
-
-        $courseurl   = new moodle_url("/course/view.php?id=" . $details->uuid);
-        $linkurl     = html_writer::link($courseurl, $configtitle);
-
-        // Get the course details to be able to get the course summary file.
-        // Once we get the file we could simply remove it from the summary
-        // because we don't want this on the course description.
-        $coursedetail = $event->get_record_snapshot('course', $details->uuid);
-        $summaryfile  = self::get_coursesummaryfile($coursedetail);
-
-        // Remove link.
-        $linkremoved = str_replace($linkurl, "", $summary);
-
-        // Remove summary file.
-        $description = str_replace($summaryfile, "", $linkremoved);
-        $description = str_replace("<br /><br />", "", $description);
 
         $data               = new stdClass;
         $data->id           = $details->uuid;
         $data->fullname     = $details->name;
-        $data->summary      = $description;
         $data->startdate    = $startdate;
         $data->enddate      = $enddate;
 
@@ -390,7 +428,7 @@ class helper {
     /**
      * Returns the event id for a course.
      *
-     * @param  int $courseid
+     * @param  int $courseidul
      * @return object
      */
     public static function is_a_course($eventid) {
