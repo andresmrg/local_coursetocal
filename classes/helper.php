@@ -51,6 +51,7 @@ class helper {
     public static function create_event($event) {
 
         $config         = get_config('local_coursetocal');
+        $configexport = (isset($config->exportcal)) ? $config->exportcal : get_string('exportcal', 'local_coursetocal');
         $courseinfo     = $event->get_data();
         $details        = $event->get_record_snapshot('course', $courseinfo['courseid']);
         $dateinfo       = self::get_course_dates($details->id);
@@ -62,8 +63,9 @@ class helper {
             return;
         }
 
+        $attr2 = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
         $courseurl = new moodle_url("/course/view.php?id=" . $courseinfo['courseid']);
-        $linkurl = html_writer::link($courseurl, $config->title);
+        $linkurl = html_writer::link($courseurl, $config->title, $attr2);
 
         $data = self::build_data(
             $details->fullname,
@@ -79,8 +81,8 @@ class helper {
         // Capture the eventid to generate the link to export.
         $params = array('eventid' => $eventid->id);
         $calurl = new moodle_url('/local/coursetocal/exportcal.php', $params);
-        $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
-        $linkurl .= html_writer::link($calurl, get_string('exportcal', 'local_coursetocal'), $attr);
+        $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
+        $linkurl .= html_writer::link($calurl, $configexport, $attr);
         $event->description = $details->summary . "<br>" . $summaryfile . $linkurl;
 
         $event->update($data);
@@ -158,6 +160,7 @@ class helper {
     public static function update_event($event) {
 
         $config     = get_config('local_coursetocal');
+        $configexport = (isset($config->exportcal)) ? $config->exportcal : get_string('exportcal', 'local_coursetocal');
         $courseinfo = $event->get_data();
         $details    = $event->get_record_snapshot('course', $courseinfo['courseid']);
         $summaryfile  = self::get_coursesummaryfile($details);
@@ -178,13 +181,14 @@ class helper {
         }
 
         // Create object.
+        $attr2 = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
         $courseurl  = new moodle_url("/course/view.php?id=" . $courseinfo['courseid']);
-        $linkurl    = html_writer::link($courseurl, $config->title);
+        $linkurl    = html_writer::link($courseurl, $config->title, $attr2);
 
         $params = array('eventid' => $eventid->id);
         $calurl = new moodle_url('/local/coursetocal/exportcal.php', $params);
-        $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
-        $linkurl .= html_writer::link($calurl, get_string('exportcal', 'local_coursetocal'), $attr);
+        $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
+        $linkurl .= html_writer::link($calurl, $configexport, $attr);
 
         $data = new stdClass;
         $data->name            = $details->fullname;
@@ -270,6 +274,7 @@ class helper {
         // Get standard course by default to set public events.
         $cid            = $DB->get_field_sql("SELECT id FROM {course} WHERE category = ?", array(0));
         $configtitle    = (isset($config->title)) ? $config->title : get_string('gotocourse', 'local_coursetocal');
+        $configexport    = (isset($config->exportcal)) ? $config->exportcal : get_string('exportcal', 'local_coursetocal');
 
         // For each course update the event.
         foreach ($courses as $course) {
@@ -306,14 +311,15 @@ class helper {
                 $event = \calendar_event::load($data->id);
 
                 // Capture the eventid to generate the link to export.
+                $attr2 = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
                 $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
-                $linkurl    = html_writer::link($courseurl, $configtitle);
+                $linkurl    = html_writer::link($courseurl, $configtitle, $attr2);
 
                 $params = array('eventid' => $event->id);
-                $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
+                $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
                 $linkurl .= html_writer::link(
                     new moodle_url('/local/coursetocal/exportcal.php', $params),
-                    get_string('exportcal', 'local_coursetocal'), $attr
+                    $configexport, $attr
                 );
                 $data->description = $course->summary . "<br>" . $summaryfile . $linkurl;
 
@@ -325,14 +331,15 @@ class helper {
                 $event = \calendar_event::create($data);
 
                 // Capture the eventid to generate the link to export.
+                $attr2 = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
                 $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
-                $linkurl    = html_writer::link($courseurl, $configtitle);
+                $linkurl    = html_writer::link($courseurl, $configtitle, $attr2);
 
                 $params = array('eventid' => $event->id);
-                $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
+                $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
                 $linkurl .= html_writer::link(
                     new moodle_url('/local/coursetocal/exportcal.php', $params),
-                    get_string('exportcal', 'local_coursetocal'), $attr
+                    $configexport, $attr
                 );
                 $data->description = $course->summary . "<br>" . $summaryfile . $linkurl;
 

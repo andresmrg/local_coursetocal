@@ -28,6 +28,8 @@ $string['categoriestoshow_desc'] = 'All courses in the selected categories above
     the Miscellaneous category is selected.';
 $string['linktitle'] = 'Link Text';
 $string['linktitle_desc'] = 'The link text the user clicks to go to the course when viewing the event in the calendar.';
+$string['exporttitle'] = 'Export Link Text';
+$string['exporttitle_desc'] = 'The link text the user clicks to export the event when viewing the event in the calendar.';
 $string['gotocourse'] = 'Click Here for Access';
 $string['exportcal'] = 'Export Event';
 $string['privacy:metadata'] = 'The Courses to Calendar plugin only displays courses dates and descriptions in the calendar.';

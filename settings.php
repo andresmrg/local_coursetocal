@@ -51,6 +51,16 @@ if ($hassiteconfig) {
                 get_string('gotocourse', 'local_coursetocal')
             )
         );
+
+        $settings->add(
+            new admin_setting_configtext(
+                'local_coursetocal/exportcal',
+                get_string('exporttitle', 'local_coursetocal'),
+                get_string('exporttitle_desc', 'local_coursetocal'),
+                get_string('exportcal', 'local_coursetocal')
+            )
+        );
+
     }
     $ADMIN->add('localplugins', $settings);
 

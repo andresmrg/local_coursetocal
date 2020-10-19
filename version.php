@@ -25,6 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_coursetocal';
-$plugin->version   = 2020101900;
+$plugin->version   = 2020101902;
 $plugin->requires  = 2016112900;
 $plugin->cron      = 300; // Seconds.
