@@ -24,32 +24,34 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-if ($ADMIN->fulltree) {
+if ($hassiteconfig) {
 
     // Update events when coming to the settings to make sure changes take effect.
     \local_coursetocal\helper::cron();
 
     $settings = new admin_settingpage( 'local_coursetocal', get_string('pluginname', 'local_coursetocal') );
     $categories = \local_coursetocal\helper::get_course_categories();
-    $settings->add(
-        new admin_setting_configmultiselect(
-            'local_coursetocal/categories',
-            get_string('categoriestoshow', 'local_coursetocal'),
-            get_string('categoriestoshow_desc', 'local_coursetocal'),
-            array(1),
-            $categories
-        )
-    );
 
-    $settings->add(
-        new admin_setting_configtext(
-            'local_coursetocal/title',
-            get_string('linktitle', 'local_coursetocal'),
-            get_string('linktitle_desc', 'local_coursetocal'),
-            get_string('gotocourse', 'local_coursetocal')
-        )
-    );
+    if ($ADMIN->fulltree) {
+        $settings->add(
+            new admin_setting_configmultiselect(
+                'local_coursetocal/categories',
+                get_string('categoriestoshow', 'local_coursetocal'),
+                get_string('categoriestoshow_desc', 'local_coursetocal'),
+                array(1),
+                $categories
+            )
+        );
 
+        $settings->add(
+            new admin_setting_configtext(
+                'local_coursetocal/title',
+                get_string('linktitle', 'local_coursetocal'),
+                get_string('linktitle_desc', 'local_coursetocal'),
+                get_string('gotocourse', 'local_coursetocal')
+            )
+        );
+    }
     $ADMIN->add('localplugins', $settings);
 
 }
