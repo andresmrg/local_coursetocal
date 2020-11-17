@@ -26,9 +26,6 @@ defined('MOODLE_INTERNAL') || die;
 
 if ($hassiteconfig) {
 
-    // Update events when coming to the settings to make sure changes take effect.
-    \local_coursetocal\helper::cron();
-
     $settings = new admin_settingpage( 'local_coursetocal', get_string('pluginname', 'local_coursetocal') );
     $categories = \local_coursetocal\helper::get_course_categories();
 
