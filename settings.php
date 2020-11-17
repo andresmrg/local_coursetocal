@@ -30,6 +30,10 @@ if ($hassiteconfig) {
     $categories = \local_coursetocal\helper::get_course_categories();
 
     if ($ADMIN->fulltree) {
+
+        // Update events when coming to the settings to make sure changes take effect.
+        \local_coursetocal\helper::cron();
+
         $settings->add(
             new admin_setting_configmultiselect(
                 'local_coursetocal/categories',
