@@ -15,15 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version file.
+ * Sync file.
  *
  * @package    local_coursetocal
  * @copyright  2020 LMS DOCTOR
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'local_coursetocal';
-$plugin->version   = 2020121200;
-$plugin->requires  = 2016112900;
+require(__DIR__ . '/../../config.php');
+\local_coursetocal\helper::sync_events();

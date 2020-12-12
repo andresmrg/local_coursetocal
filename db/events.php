@@ -47,7 +47,7 @@ $observers = array(
 
     array (
         'eventname'   => '\core\event\course_category_updated',
-        'callback'    => '\local_coursetocal\helper::cron',
+        'callback'    => '\local_coursetocal\helper::sync_events',
     ),
 
     array (

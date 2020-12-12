@@ -32,4 +32,6 @@ $string['exporttitle'] = 'Export Link Text';
 $string['exporttitle_desc'] = 'The link text the user clicks to export the event when viewing the event in the calendar.';
 $string['gotocourse'] = 'Click Here for Access';
 $string['exportcal'] = 'Export Event';
+$string['syncevents'] = 'Sync events';
+$string['syncevents_desc'] = 'Only click this button if you have change the categories for the calendar events.';
 $string['privacy:metadata'] = 'The Courses to Calendar plugin only displays courses dates and descriptions in the calendar.';

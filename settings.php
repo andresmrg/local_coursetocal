@@ -31,9 +31,6 @@ if ($hassiteconfig) {
 
     if ($ADMIN->fulltree) {
 
-        // Update events when coming to the settings to make sure changes take effect.
-        \local_coursetocal\helper::cron();
-
         $settings->add(
             new admin_setting_configmultiselect(
                 'local_coursetocal/categories',
@@ -59,6 +56,17 @@ if ($hassiteconfig) {
                 get_string('exporttitle', 'local_coursetocal'),
                 get_string('exporttitle_desc', 'local_coursetocal'),
                 get_string('exportcal', 'local_coursetocal')
+            )
+        );
+
+        $syncurl = new moodle_url('/local/coursetocal/sync.php');
+
+        // Button to manually update the plugin.
+        $settings->add(
+            new admin_setting_configempty(
+                'local_coursetocal/syncbutton',
+                get_string('syncevents', 'local_coursetocal'),
+                '<a target="_blank" href="' . $syncurl . '" class="btn btn-primary">' . get_string('syncevents', 'local_coursetocal') . '</a> ' . get_string('syncevents_desc', 'local_coursetocal'),
             )
         );
 

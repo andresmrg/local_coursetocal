@@ -243,7 +243,7 @@ class helper {
      *
      * @return bool
      */
-    public static function cron() {
+    public static function sync_events() {
         global $CFG, $DB;
 
         $DB->delete_records('event', array('eventtype' => 'site', 'type' => '-99'));
@@ -275,6 +275,9 @@ class helper {
         $cid            = $DB->get_field_sql("SELECT id FROM {course} WHERE category = ?", array(0));
         $configtitle    = (isset($config->title)) ? $config->title : get_string('gotocourse', 'local_coursetocal');
         $configexport    = (isset($config->exportcal)) ? $config->exportcal : get_string('exportcal', 'local_coursetocal');
+
+        mtrace('Course to cal events will begin to sync.');
+        echo '<br><br>';
 
         // For each course update the event.
         foreach ($courses as $course) {
@@ -324,6 +327,8 @@ class helper {
                 $data->description = $course->summary . "<br>" . $summaryfile . $linkurl;
 
                 $event->update($data);
+                mtrace('Events updated for the course ' . $course->fullname);
+                echo '<br>';
 
             } else {
 
@@ -345,9 +350,15 @@ class helper {
 
                 $event->update($data);
 
+                mtrace('Events updated for the course ' . $course->fullname);
+                echo '<br>';
+
             }
 
         }
+
+        mtrace('Sync finished. You can close this window.');
+        echo '<br><br>';
 
         return true;
     }
