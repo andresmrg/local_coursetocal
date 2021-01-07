@@ -66,7 +66,7 @@ if ($hassiteconfig) {
             new admin_setting_configempty(
                 'local_coursetocal/syncbutton',
                 get_string('syncevents', 'local_coursetocal'),
-                '<a target="_blank" href="' . $syncurl . '" class="btn btn-primary">' . get_string('syncevents', 'local_coursetocal') . '</a> ' . get_string('syncevents_desc', 'local_coursetocal'),
+                '<a target="_blank" href="' . $syncurl . '" class="btn btn-primary">' . get_string('syncevents', 'local_coursetocal') . '</a> ' . get_string('syncevents_desc', 'local_coursetocal')
             )
         );
 
