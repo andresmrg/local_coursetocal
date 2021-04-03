@@ -196,21 +196,17 @@ class helper {
         $data->timestart       = $details->startdate;
 	// we need to calculate the enddate ourselves if the User has enabled
         //"Calculate the end date from the number of sections" in a weekly-format course
-        if($details->enddate == '0')
-        {
-            if($details->format == 'weeks')
-            {
+        if ($details->enddate == '0') {
+	    $data->timeduration = 0; //punctual event 
+            if ($details->format == 'weeks') {
                 global $DB;
-                $coursesection_nb = $DB->count_records('course_sections', array('course'=>$details->id));
+                $coursesectionnb = $DB->count_records('course_sections', array('course' => $details->id));
                 //the number of sections for one course has always one dummy more to be substracted
                 // to get the real number of sections:
-                $data->timeduration = ($coursesection_nb-1)*3600*24*7; //so in seconds
-            } else {
-                $data->timeduration    = 0; //punctual event
-            }
-        } else {
-            $data->timeduration    = $details->enddate - $details->startdate;
-        }
+                $data->timeduration = ($coursesectionnb - 1) * 3600 * 24 * 7; //so in seconds
+	} else { 
+	    $data->timeduration    = $details->enddate - $details->startdate; 
+	}
         $data->type            = '-99';
         $data->eventtype       = 'site';
         $data->modulename      = 0;
