@@ -194,19 +194,19 @@ class helper {
         $data->name            = $details->fullname;
         $data->description     = $details->summary . "<br>" . $summaryfile . $linkurl;
         $data->timestart       = $details->startdate;
-	// we need to calculate the enddate ourselves if the User has enabled
-        //"Calculate the end date from the number of sections" in a weekly-format course
-        if ($details->enddate == '0') {
-	    $data->timeduration = 0; //punctual event 
-            if ($details->format == 'weeks') {
+        $data->timeduration    = $details->enddate - $details->startdate;
+        // We need to calculate the enddate ourselves if the User has enabled...
+        // ..."Calculate the end date from the number of sections" in a weekly-format course.
+        if (empty($details->enddate)) {
+            $data->timeduration = 0; // Punctual event...
+            if ($details->format == 'weeks') { // ...unless it is in fact a weekly-format course.
                 global $DB;
                 $coursesectionnb = $DB->count_records('course_sections', array('course' => $details->id));
-                //the number of sections for one course has always one dummy more to be substracted
-                // to get the real number of sections:
-                $data->timeduration = ($coursesectionnb - 1) * 3600 * 24 * 7; //so in seconds
-	} else { 
-	    $data->timeduration    = $details->enddate - $details->startdate; 
-	}
+                // The number of sections for one course has always one dummy more to be substracted...
+                // ...to get the real number of sections.
+                $data->timeduration = ($coursesectionnb - 1) * 3600 * 24 * 7; // So in seconds.
+            }
+        }
         $data->type            = '-99';
         $data->eventtype       = 'site';
         $data->modulename      = 0;
