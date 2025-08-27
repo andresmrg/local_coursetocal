@@ -35,3 +35,4 @@ $string['exportcal'] = 'Export Event';
 $string['syncevents'] = 'Sync events';
 $string['syncevents_desc'] = 'Only click this button if you have change the categories for the calendar events.';
 $string['privacy:metadata'] = 'The Courses to Calendar plugin only displays courses dates and descriptions in the calendar.';
+$string['tasksyncname'] = 'Courses to Calendar sync';
