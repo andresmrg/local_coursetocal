@@ -24,7 +24,7 @@
 
 require(__DIR__ . '/../../config.php');
 
-global $USER, $DB;
+global $CFG, $USER, $DB;
 
 $password = $DB->get_record('user', array('id' => $USER->id), 'password');
 $params = array();
