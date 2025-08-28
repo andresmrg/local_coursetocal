@@ -34,5 +34,8 @@ $params['eventid']   = optional_param('eventid', 0, PARAM_INT);
 
 $link = new moodle_url('/local/coursetocal/export.php', $params);
 $urlclasses = array('class' => 'generalbox calendarurl');
-$calendarurl = html_writer::tag( 'div', get_string('calendarurl', 'calendar', $link->out()), $urlclasses);
-redirect($link);
+$calendarurl = html_writer::tag(
+    'div',
+    get_string('calendarurl', 'local_coursetocal', $link->out()),
+    $urlclasses
+);
