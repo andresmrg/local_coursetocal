@@ -76,15 +76,16 @@ class helper {
         );
 
         $event = \calendar_event::create($data);
-        $eventid = self::get_eventid($details->id);
+        $eid = (int)$event->id;
 
         // Capture the eventid to generate the link to export.
-        $params = array('eventid' => $eventid->id);
+        $params = array('eventid' => $eid);
         $calurl = new moodle_url('/local/coursetocal/exportcal.php', $params);
         $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
         $linkurl .= html_writer::link($calurl, $configexport, $attr);
-        $event->description = $details->summary . "<br>" . $summaryfile . $linkurl;
 
+        // Put description into $data, then update.
+        $data->description = $details->summary . "<br>" . $summaryfile . $linkurl;
         $event->update($data);
 
     }
@@ -171,22 +172,26 @@ class helper {
         // Attempt to get an existing event id.
         $eventid = self::get_eventid($courseinfo['courseid']);
 
-        if (!$candocategory && !empty($eventid)) {
-            $event = \calendar_event::load($eventid);
-            $event->name = $courseinfo['other']['fullname'];
-            $event->timestart = $details->startdate;
-            $event->repeatid = 0;
-            $event->delete();
-        } else if (!$candocategory) {
-            return;
-        }
+        if (!$candocategory) {
+            if (!empty($eventid)) {
+                try {
+                    $ev = \calendar_event::load((int)$eventid);
+                    if ($ev) {
+                        $ev->delete();
+                    }
+                } catch (\Throwable $e) {
+                    // already gone, ignore
+                    }
+            }
+    return; // <<< stop here
+}
 
         // Create object.
         $attr2 = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
         $courseurl  = new moodle_url("/course/view.php?id=" . $courseinfo['courseid']);
         $linkurl    = html_writer::link($courseurl, $config->title, $attr2);
 
-        $params = array('eventid' => $eventid->id);
+        $params = array('eventid' => (int)$eventid);
         $calurl = new moodle_url('/local/coursetocal/exportcal.php', $params);
         $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
         $linkurl .= html_writer::link($calurl, $configexport, $attr);
@@ -246,8 +251,16 @@ class helper {
         }
 
         $eventid = self::get_eventid($courseinfo['courseid']);
-        $events = \calendar_event::load($eventid);
-        $events->delete();
+        if (!empty($eventid)) {
+            try {
+                $ev = \calendar_event::load((int)$eventid);
+                if ($ev) {
+                    $ev->delete();
+                }
+            } catch (\Throwable $e) {
+                // ignore if already gone
+            }
+        }
 
     }
 
@@ -378,9 +391,15 @@ class helper {
      * @return object
      */
     public static function get_eventid($courseid) {
-        global $DB;
-        return $DB->get_record('event', array('uuid' => $courseid, 'courseid' => 1), 'id');
-    }
+    global $DB;
+    $id = $DB->get_field('event', 'id', [
+        'uuid'      => (int)$courseid,
+        'courseid'  => 1,
+        'eventtype' => 'site',
+        'type'      => '-99'
+    ]);
+    return (int)($id ?: 0);
+}
 
     /**
      * Validates if a course belongs to categories to create calendar events.
