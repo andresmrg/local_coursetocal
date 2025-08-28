@@ -76,15 +76,16 @@ class helper {
         );
 
         $event = \calendar_event::create($data);
-        $eventid = self::get_eventid($details->id);
+        $eid = (int)$event->id;
 
         // Capture the eventid to generate the link to export.
-        $params = array('eventid' => $eventid->id);
+        $params = array('eventid' => $eid);
         $calurl = new moodle_url('/local/coursetocal/exportcal.php', $params);
         $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
         $linkurl .= html_writer::link($calurl, $configexport, $attr);
-        $event->description = $details->summary . "<br>" . $summaryfile . $linkurl;
 
+        // Put description into $data, then update.
+        $data->description = $details->summary . "<br>" . $summaryfile . $linkurl;
         $event->update($data);
 
     }
@@ -93,7 +94,7 @@ class helper {
         $data = new stdClass();
 
         $data->eventtype       = 'site';
-        $data->type            = '-99';
+        $data->type            = 1;
         $data->name            = $fullname;
         $data->uuid            = $uuid;
         $data->courseid        = 1;
@@ -104,6 +105,7 @@ class helper {
         $data->timestart       = $tstart;
         $data->visible         = (empty($visible)) ? 0 : 1;
         $data->timeduration    = $tend - $tstart;
+        $data->component       = 'local_coursetocal';
 
         return $data;
     }
@@ -170,22 +172,26 @@ class helper {
         // Attempt to get an existing event id.
         $eventid = self::get_eventid($courseinfo['courseid']);
 
-        if (!$candocategory && !empty($eventid)) {
-            $event = \calendar_event::load($eventid);
-            $event->name = $courseinfo['other']['fullname'];
-            $event->timestart = $details->startdate;
-            $event->repeatid = 0;
-            $event->delete();
-        } else if (!$candocategory) {
-            return;
-        }
+        if (!$candocategory) {
+            if (!empty($eventid)) {
+                try {
+                    $ev = \calendar_event::load((int)$eventid);
+                    if ($ev) {
+                        $ev->delete();
+                    }
+                } catch (\Throwable $e) {
+                    // already gone, ignore
+                    }
+            }
+    return; // <<< stop here
+}
 
         // Create object.
         $attr2 = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
         $courseurl  = new moodle_url("/course/view.php?id=" . $courseinfo['courseid']);
         $linkurl    = html_writer::link($courseurl, $config->title, $attr2);
 
-        $params = array('eventid' => $eventid->id);
+        $params = array('eventid' => (int)$eventid);
         $calurl = new moodle_url('/local/coursetocal/exportcal.php', $params);
         $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
         $linkurl .= html_writer::link($calurl, $configexport, $attr);
@@ -207,9 +213,10 @@ class helper {
                 $data->timeduration = ($coursesectionnb - 1) * 3600 * 24 * 7; // So in seconds.
             }
         }
-        $data->type            = '-99';
+        $data->type            = 1;
         $data->eventtype       = 'site';
         $data->modulename      = 0;
+        $data->component       = 'local_coursetocal';
         $data->visible         = (empty($details->visible)) ? 0 : 1;
 
         if (empty($eventid)) {
@@ -245,8 +252,16 @@ class helper {
         }
 
         $eventid = self::get_eventid($courseinfo['courseid']);
-        $events = \calendar_event::load($eventid);
-        $events->delete();
+        if (!empty($eventid)) {
+            try {
+                $ev = \calendar_event::load((int)$eventid);
+                if ($ev) {
+                    $ev->delete();
+                }
+            } catch (\Throwable $e) {
+                // ignore if already gone
+            }
+        }
 
     }
 
@@ -256,124 +271,119 @@ class helper {
      * @return bool
      */
     public static function sync_events() {
-        global $CFG, $DB;
+    global $CFG, $DB;
 
-        $DB->delete_records('event', array('eventtype' => 'site', 'type' => '-99'));
+    // Get a real admin user id (avoid userid=0 invaliduser errors).
+    $adminids = array_map('intval', explode(',', $CFG->siteadmins));
+    $siteadminid = reset($adminids) ?: 2; // fallback if parsing fails
 
-        // Get config.
-        $config = get_config('local_coursetocal');
-
-        // Validate if there are categories.
-        if (empty($config->categories)) {
-            $sql1 = "SELECT id,category,fullname,startdate,enddate,summary,visible FROM {course}";
-        } else {
-            $cats = preg_split('/,/', $config->categories);
-            $sql1 = "SELECT id,category,fullname,startdate,enddate,summary,visible FROM {course}";
-
-            $where = " WHERE ";
-            foreach ($cats as $cat) {
-                $where .= " category = $cat OR";
-            }
-
-            if ($cats) {
-                $where = substr($where, 0, -2);
-                $sql1 .= $where;
-            }
+    // Build course SQL safely.
+    $config = get_config('local_coursetocal');
+    $sql1 = "SELECT id,category,fullname,startdate,enddate,summary,visible FROM {course}";
+    $params = [];
+    if (!empty($config->categories)) {
+        $cats = array_filter(array_map('intval', preg_split('/,/', $config->categories)));
+        if (!empty($cats)) {
+            list($inSql, $inParams) = $DB->get_in_or_equal($cats, SQL_PARAMS_QM);
+            $sql1 .= " WHERE category $inSql";
+            $params = array_merge($params, $inParams);
         }
-
-        $courses = $DB->get_records_sql($sql1);
-
-        // Get standard course by default to set public events.
-        $cid            = $DB->get_field_sql("SELECT id FROM {course} WHERE category = ?", array(0));
-        $configtitle    = (isset($config->title)) ? $config->title : get_string('gotocourse', 'local_coursetocal');
-        $configexport    = (isset($config->exportcal)) ? $config->exportcal : get_string('exportcal', 'local_coursetocal');
-
-        mtrace('Course to cal events will begin to sync.');
-        echo '<br><br>';
-
-        // For each course update the event.
-        foreach ($courses as $course) {
-
-            if ($course->id == 1) {
-                continue;
-            }
-
-            $summaryfile  = self::get_coursesummaryfile($course);
-
-            $tday = getdate();
-            $data = new stdClass();
-            $data->name         = $course->fullname;
-            $data->format       = 1;
-            $data->courseid     = 1;
-            $data->uuid         = $course->id;
-            $data->groupid      = 0;
-            $data->userid       = 2;
-            $data->repeatid     = 0;
-            $data->modulename   = 0;
-            $data->instance     = 0;
-            $data->eventtype    = 'site';
-            $data->type         = '-99';
-            $data->timestart    = $course->startdate;
-            $data->timeduration = $course->enddate - $course->startdate;
-            $data->timemodified = $tday['0'];
-            $data->sequence     = 1;
-            $data->visible      = (empty($course->visible)) ? 0 : 1;
-
-            // If exist the event then update.
-            $sql = 'SELECT id from {event} WHERE uuid = ? AND eventtype = ? AND type = ?';
-            if ($DB->record_exists_sql($sql, array( $course->id, 'site', '-99' ))) {
-                $data->id = $DB->get_field_sql($sql, array( $course->id, 'site', '-99') );
-                $event = \calendar_event::load($data->id);
-
-                // Capture the eventid to generate the link to export.
-                $attr2 = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
-                $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
-                $linkurl    = html_writer::link($courseurl, $configtitle, $attr2);
-
-                $params = array('eventid' => $event->id);
-                $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
-                $linkurl .= html_writer::link(
-                    new moodle_url('/local/coursetocal/exportcal.php', $params),
-                    $configexport, $attr
-                );
-                $data->description = $course->summary . "<br>" . $summaryfile . $linkurl;
-
-                $event->update($data);
-                mtrace('Events updated for the course ' . $course->fullname);
-                echo '<br>';
-
-            } else {
-
-                // Create the event and update with the new link to download.
-                $event = \calendar_event::create($data);
-
-                // Capture the eventid to generate the link to export.
-                $attr2 = array('class' => 'd-block col-3 mt-2 btn btn btn-primary');
-                $courseurl  = new moodle_url("/course/view.php?id=" . $course->id);
-                $linkurl    = html_writer::link($courseurl, $configtitle, $attr2);
-
-                $params = array('eventid' => $event->id);
-                $attr = array('class' => 'd-block col-3 mt-2 btn btn btn-default');
-                $linkurl .= html_writer::link(
-                    new moodle_url('/local/coursetocal/exportcal.php', $params),
-                    $configexport, $attr
-                );
-                $data->description = $course->summary . "<br>" . $summaryfile . $linkurl;
-
-                $event->update($data);
-
-                mtrace('Events updated for the course ' . $course->fullname);
-                echo '<br>';
-
-            }
-
-        }
-
-        mtrace('Sync finished. You can close this window.');
-        echo '<br><br>';
-
-        return true;
     }
+
+    $courses = $DB->get_records_sql($sql1, $params);
+
+    mtrace('Course to cal events will begin to sync.');
+
+    $transaction = $DB->start_delegated_transaction();
+    $newuuids = [];
+
+    foreach ($courses as $course) {
+        if ((int)$course->id === 1) { // Skip front page course record.
+            continue;
+        }
+        $newuuids[] = (int)$course->id;
+
+        $summaryfile  = self::get_coursesummaryfile($course);
+        $tday         = time();
+
+        $data = (object)[
+            'name'         => $course->fullname,
+            'description'  => null,              // set after we know $event->id
+            'format'       => FORMAT_HTML,
+            'courseid'     => 1,                 // front-page event
+            'uuid'         => (int)$course->id,
+            'groupid'      => 0,
+            'userid'       => 2,      // real user (not 0)
+            'repeatid'     => 0,
+            'modulename'   => 0,
+            'instance'     => 0,
+            'eventtype'    => 'site',
+            'type'         => 1,             // plugin marker
+            'timestart'    => (int)$course->startdate,
+            'timeduration' => max(0, (int)$course->enddate - (int)$course->startdate),
+            'timemodified' => $tday,
+            'sequence'     => 1,
+            'visible'      => empty($course->visible) ? 0 : 1,
+            'component'    => 'local_coursetocal', // important
+        ];
+
+        $existsid = $DB->get_field_sql(
+            'SELECT id FROM {event} WHERE uuid=? AND eventtype=? AND component=?',
+            [$data->uuid, 'site', 'local_coursetocal']
+        );
+
+        if ($existsid) {
+            $data->id = (int)$existsid;
+            $event = \calendar_event::load($data->id);
+
+            // Build description with links (needs $event->id).
+            $attr2 = ['class' => 'd-block col-3 mt-2 btn btn btn-primary'];
+            $courseurl = new \moodle_url('/course/view.php', ['id' => $course->id]);
+            $linkurl   = \html_writer::link($courseurl, get_string('gotocourse', 'local_coursetocal'), $attr2);
+
+            $params = ['eventid' => $event->id];
+            $attr   = ['class' => 'd-block col-3 mt-2 btn btn btn-default'];
+            $linkurl .= \html_writer::link(
+                new \moodle_url('/local/coursetocal/exportcal.php', $params),
+                get_string('exportcal', 'local_coursetocal'), $attr
+            );
+            $data->description = $course->summary . "<br>" . $summaryfile . $linkurl;
+
+            $event->update($data);
+            mtrace('Events updated for the course ' . $course->fullname);
+        } else {
+            $event = \calendar_event::create($data);
+
+            $attr2 = ['class' => 'd-block col-3 mt-2 btn btn btn-primary'];
+            $courseurl = new \moodle_url('/course/view.php', ['id' => $course->id]);
+            $linkurl   = \html_writer::link($courseurl, get_string('gotocourse', 'local_coursetocal'), $attr2);
+
+            $params = ['eventid' => $event->id];
+            $attr   = ['class' => 'd-block col-3 mt-2 btn btn btn-default'];
+            $linkurl .= \html_writer::link(
+                new \moodle_url('/local/coursetocal/exportcal.php', $params),
+                get_string('exportcal', 'local_coursetocal'), $attr
+            );
+            $data->description = $course->summary . "<br>" . $summaryfile . $linkurl;
+
+            $event->update($data);
+            mtrace('Events created for the course ' . $course->fullname);
+        }
+    }
+
+    // Prune stale events (courses no longer selected). Only after we built the new set.
+    if (!empty($newuuids)) {
+        list($inSql, $inParams) = $DB->get_in_or_equal($newuuids, SQL_PARAMS_QM, '', false);
+        $DB->delete_records_select('event',
+            "eventtype='site' AND component='local_coursetocal' AND uuid $inSql",
+            $inParams
+        );
+    }
+
+    $transaction->allow_commit();
+    mtrace('Sync finished. You can close this window.');
+    return true;
+}
 
     /**
      * Returns the event id for a course.
@@ -382,9 +392,16 @@ class helper {
      * @return object
      */
     public static function get_eventid($courseid) {
-        global $DB;
-        return $DB->get_record('event', array('uuid' => $courseid, 'courseid' => 1), 'id');
-    }
+    global $DB;
+    $id = $DB->get_field('event', 'id', [
+        'uuid'      => (int)$courseid,
+        'courseid'  => 1,
+        'eventtype' => 'site',
+        'component' => 'local_coursetocal',
+        'type'      => 1
+    ]);
+    return (int)($id ?: 0);
+}
 
     /**
      * Validates if a course belongs to categories to create calendar events.
@@ -437,8 +454,8 @@ class helper {
         $e          = $event->get_data();
         $details    = $event->get_record_snapshot('event', $e['objectid']);
 
-        // If the event is not -99, it is not a course event.
-        if ($details->type != '-99') {
+        // If the event is not coursetocal, it is not a course event.
+        if ($details->component != 'local_coursetocal') {
             return;
         }
 
