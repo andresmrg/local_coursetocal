@@ -94,7 +94,7 @@ class helper {
         $data = new stdClass();
 
         $data->eventtype       = 'site';
-        $data->type            = -99;
+        $data->type            = 1;
         $data->name            = $fullname;
         $data->uuid            = $uuid;
         $data->courseid        = 1;
@@ -213,9 +213,10 @@ class helper {
                 $data->timeduration = ($coursesectionnb - 1) * 3600 * 24 * 7; // So in seconds.
             }
         }
-        $data->type            = -99;
+        $data->type            = 1;
         $data->eventtype       = 'site';
         $data->modulename      = 0;
+        $data->component       = 'local_coursetocal';
         $data->visible         = (empty($details->visible)) ? 0 : 1;
 
         if (empty($eventid)) {
@@ -317,7 +318,7 @@ class helper {
             'modulename'   => 0,
             'instance'     => 0,
             'eventtype'    => 'site',
-            'type'         => -99,             // plugin marker
+            'type'         => 1,             // plugin marker
             'timestart'    => (int)$course->startdate,
             'timeduration' => max(0, (int)$course->enddate - (int)$course->startdate),
             'timemodified' => $tday,
@@ -327,8 +328,8 @@ class helper {
         ];
 
         $existsid = $DB->get_field_sql(
-            'SELECT id FROM {event} WHERE uuid=? AND eventtype=? AND type=?',
-            [$data->uuid, 'site', -99]
+            'SELECT id FROM {event} WHERE uuid=? AND eventtype=? AND component=?',
+            [$data->uuid, 'site', 'local_coursetocal']
         );
 
         if ($existsid) {
@@ -374,7 +375,7 @@ class helper {
     if (!empty($newuuids)) {
         list($inSql, $inParams) = $DB->get_in_or_equal($newuuids, SQL_PARAMS_QM, '', false);
         $DB->delete_records_select('event',
-            "eventtype='site' AND type= -99 AND component='local_coursetocal' AND uuid $inSql",
+            "eventtype='site' AND component='local_coursetocal' AND uuid $inSql",
             $inParams
         );
     }
@@ -396,7 +397,8 @@ class helper {
         'uuid'      => (int)$courseid,
         'courseid'  => 1,
         'eventtype' => 'site',
-        'type'      => -99
+        'component' => 'local_coursetocal',
+        'type'      => 1
     ]);
     return (int)($id ?: 0);
 }
@@ -452,8 +454,8 @@ class helper {
         $e          = $event->get_data();
         $details    = $event->get_record_snapshot('event', $e['objectid']);
 
-        // If the event is not -99, it is not a course event.
-        if ($details->type != -99) {
+        // If the event is not coursetocal, it is not a course event.
+        if ($details->component != 'local_coursetocal') {
             return;
         }
 
